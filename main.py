@@ -2,9 +2,13 @@ import string
 import re
 import subprocess
 import sys
+from tabnanny import check
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
+from matplotlib.pyplot import text
+import os
+ 
 
 from view.mainView import Ui_MainWindow
 
@@ -30,7 +34,7 @@ def comando(entry):
             if len(entry) == 2:
                 apuntador += 1
 
-                responseP = palabra(entry[apuntador])
+                responseP = isPalabra(entry[apuntador])
 
                 if responseP =='Correcto':
                     return 'Correcto'
@@ -60,14 +64,14 @@ def comando(entry):
                 apuntador += 1
                 
                 apuntadorC = 0
-                responseP = palabra(entry[apuntador])
+                responseP = isPalabra(entry[apuntador])
                 
                 apuntador += 1
                 response2 = direccion(entry)
                 apuntadorC = 0
                 
                 apuntador += 1
-                responseP2 = palabra(entry[apuntador])
+                responseP2 = isPalabra(entry[apuntador])
                 
 
                 if response1 is None and response2 is None and responseP =='Correcto' and responseP2 =='Correcto':
@@ -83,7 +87,7 @@ def comando(entry):
             apuntador += 1
             responseD = direccion(entry) 
             apuntador += 1
-            responseP = palabra(entry[apuntador])
+            responseP = isPalabra(entry[apuntador])
 
        
 
@@ -97,7 +101,7 @@ def comando(entry):
             apuntador += 1
             responseD = direccion(entry)
             apuntador += 1
-            responseP = palabra(entry[apuntador])
+            responseP = isPalabra(entry[apuntador])
 
             
 
@@ -122,7 +126,7 @@ def comando(entry):
 
                     if entry[apuntador].count('/') == 0:
                         
-                        responseD = palabra(entry[apuntador])
+                        responseD = isPalabra(entry[apuntador])
                         
                     else:
                         
@@ -140,7 +144,7 @@ def comando(entry):
                 else:
                     return 'Error'
             elif string.ascii_letters.__contains__(entry[apuntador][0]):
-                return palabra(entry[apuntador])
+                return isPalabra(entry[apuntador])
 
             else:
                 return 'Error'
@@ -183,7 +187,7 @@ def complementoM(entry):
                 else:
                     return 'Error'
         
-            if palabra(''.join(t)) == 'Error':
+            if isPalabra(''.join(t)) == 'Error':
                 return 'Error'
 
             if nextStr[apuntadorC] == DIAGONAL:
@@ -197,7 +201,7 @@ def complementoM(entry):
         
     elif string.ascii_letters.__contains__(nextStr[apuntadorC]):
         
-        return palabra(nextStr)
+        return isPalabra(nextStr)
 
     elif nextStr[apuntadorC] == '.' and len(nextStr)==1:
         return 'Error'
@@ -210,7 +214,6 @@ def complementoM(entry):
 def direccion(entry):
     global apuntadorC
     nextStr = entry[apuntador]  
-    print('Entro a direccion')
 
     if (nextStr[len(nextStr)-1] != DIAGONAL or nextStr[0] != DIAGONAL)  and nextStr.count('/') != 0:
 
@@ -228,7 +231,7 @@ def direccion(entry):
                 else:
                     return 'Error'
         
-            if palabra(''.join(t)) == 'Error':
+            if isPalabra(''.join(t)) == 'Error':
                 return 'Error'
                
             if nextStr[apuntadorC] == DIAGONAL:
@@ -241,8 +244,8 @@ def direccion(entry):
     else: 
         return 'Error'
 
-def palabra(palabra):
-    p = re.compile('(\w|_|-)+')
+def isPalabra(palabra):
+    p = re.compile('(\w|_|.|-)+')
 
     if p.fullmatch(palabra) is None: 
         return 'Error'
@@ -262,17 +265,36 @@ class main(QMainWindow):
         entry = self.ui.lineEdit.text().strip(' ').split()
         response = comando(entry = entry)
 
-        self.ui.message.setText(response)
+        self.ui.message.setText(response+' sintacticamente')
 
         if response == 'Correcto':
-            print('Ejecutar comando')
-            print(entry)
-            
-            
-
+            # print('Ejecutar comando')
+            # print(entry)
             # for palabra in entry:
 
-                
+            error = False
+            # VERIFICAMOS QUE LAS RUTAS EXISTENTES EN EL COMANDO EXISTAN
+            for i in range(len(entry)):
+                if isDirection(entry[i]):
+                    if os.path.exists(entry[i]) == False:
+                        error= 'Error de ruta'
+                        break
+                    elif i+1 < len(entry):
+                        # print('primer error archivo')   
+                        if isPalabra(entry[i+1]):
+                            if os.path.exists(entry[i]) == False:
+                                error= 'Error de Archivo'
+                                break
+                if isDirection(entry[len(entry)-1]) == False:
+                    print(entry[len(entry) - 1])
+                    if isPalabra(entry[len(entry)-1]):
+                        print('se error archivo')   
+                        if isPalabra(entry[i+1]):
+                            if os.path.exists(entry[i]) == False:
+                                error= 'Error de Archivo'
+                                break
+# rm /Users/humbe/Downloads/ message.txt
+            print(error) 
             for i in range(len(entry)):
                 palabra = entry[i]
                 
@@ -288,22 +310,50 @@ class main(QMainWindow):
                     print(f'Palabra: {palabra}')
 
                     entry[i]= palabra
-            
-            print('entry')
-# 
 
+
+            ########################
+            if entry[0] =='mkdir' and error=='Error de Archivo':
+                error=False                   
             entry = ' '.join(entry)
+            if entry =='ls -l':
+                error=False
 
-            print(entry)
-            v = r'ls "C:\Users\gugod\Downloads"'
-            print(v)
-            pipe = subprocess.Popen(v,  stdout=subprocess.PIPE).stdout
-
-            # output = pipe.read()
-
-            # texto = output.str()
+            elif error == False:
+                pipe = subprocess.Popen(entry,  stdout=subprocess.PIPE).stdout
             
-            print(pipe.read())
+                output = pipe.read()
+
+                texto = list(output.__str__())
+                # texto[0] = ''
+                texto[0] = ''
+                texto=''.join(texto)
+                texto = texto.replace('\'','')
+                # print(texto)
+                texto = texto.split('\\n')
+                texto = '\n'.join(texto)
+                # print(texto)
+                # texto = texto.replace('\'','')
+                
+                self.ui.consola.setText(texto)
+
+
+
+            # print(entry)
+                
+            # r'ls "C:\Users\humbe\Documents\Visual Studio Code\Python\Dianita"'
+            # print(v)
+            elif error=='Error de ruta':
+                self.ui.consola.setText('Ruta no existente')
+            
+            elif error=='Error de Archivo':
+                self.ui.consola.setText('Archivo no existente')
+            
+            
+
+
+
+            
             
         
 

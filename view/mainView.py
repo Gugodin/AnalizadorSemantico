@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+
+################################################################################
+## Form generated from reading UI file 'untitledFvCXaD.ui'
+##
+## Created by: Qt User Interface Compiler version 5.15.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
+
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
@@ -7,7 +17,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(656, 287)
+        MainWindow.resize(656, 524)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.label = QLabel(self.centralwidget)
@@ -39,6 +49,9 @@ class Ui_MainWindow(object):
         self.pushButton.setObjectName(u"pushButton")
         self.pushButton.setGeometry(QRect(300, 170, 75, 23))
         self.pushButton.setFont(font2)
+        self.consola = QLabel(self.centralwidget)
+        self.consola.setObjectName(u"consola")
+        self.consola.setGeometry(QRect(120, 270, 461, 211))
         MainWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -55,5 +68,6 @@ class Ui_MainWindow(object):
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Escriba el comando de linux:", None))
         self.message.setText("")
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Comprobar", None))
+        self.consola.setText("")
     # retranslateUi
 
