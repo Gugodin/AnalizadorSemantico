@@ -35,7 +35,8 @@ def comando(entry):
                 apuntador += 1
 
                 responseP = isPalabra(entry[apuntador])
-
+                if entry[apuntador] == '..':
+                    return 'Error'
                 if responseP =='Correcto':
                     return 'Correcto'
                 else:
@@ -245,7 +246,7 @@ def direccion(entry):
         return 'Error'
 
 def isPalabra(palabra):
-    p = re.compile('(\w|_|.|-)+')
+    p = re.compile('(\w|_|.|-|\s)+')
 
     if p.fullmatch(palabra) is None: 
         return 'Error'
@@ -268,33 +269,16 @@ class main(QMainWindow):
         self.ui.message.setText(response+' sintacticamente')
 
         if response == 'Correcto':
-            # print('Ejecutar comando')
-            # print(entry)
-            # for palabra in entry:
+          
 
-            error = False
-            # VERIFICAMOS QUE LAS RUTAS EXISTENTES EN EL COMANDO EXISTAN
-            for i in range(len(entry)):
-                if isDirection(entry[i]):
-                    if os.path.exists(entry[i]) == False:
-                        error= 'Error de ruta'
-                        break
-                    elif i+1 < len(entry):
-                        # print('primer error archivo')   
-                        if isPalabra(entry[i+1]):
-                            if os.path.exists(entry[i]) == False:
-                                error= 'Error de Archivo'
-                                break
-                if isDirection(entry[len(entry)-1]) == False:
-                    print(entry[len(entry) - 1])
-                    if isPalabra(entry[len(entry)-1]):
-                        print('se error archivo')   
-                        if isPalabra(entry[i+1]):
-                            if os.path.exists(entry[i]) == False:
-                                error= 'Error de Archivo'
-                                break
-# rm /Users/humbe/Downloads/ message.txt
+            # PRIMERO VERIFICAMOS QUE LAS RUTAS SEAN EXISTENTES EN EL COMANDO EXISTAN
+            error = verifyRoutesAndArchives(entry)
+
             print(error) 
+            # error = True
+
+            # rm /Users/humbe/Downloads/ message.txt
+
             for i in range(len(entry)):
                 palabra = entry[i]
                 
@@ -303,23 +287,23 @@ class main(QMainWindow):
                     l.pop(len(l)-1)
                     l.append('"')
                     l.insert(0,'"')
-                    print(l)
+                    # print(l)
 
                     palabra = ''.join(l)
                     palabra = palabra.replace('/','\\')
-                    print(f'Palabra: {palabra}')
+                    # print(f'Palabra: {palabra}')
 
                     entry[i]= palabra
 
 
             ########################
-            if entry[0] =='mkdir' and error=='Error de Archivo':
-                error=False                   
-            entry = ' '.join(entry)
-            if entry =='ls -l':
-                error=False
+            # if entry[0] =='mkdir' and error=='Error de Archivo':
+            #     error=False                   
+            # entry = ' '.join(entry)
+            # if entry =='ls -l':
+            #     error=False
 
-            elif error == False:
+            if error == False:
                 pipe = subprocess.Popen(entry,  stdout=subprocess.PIPE).stdout
             
                 output = pipe.read()
@@ -360,6 +344,92 @@ class main(QMainWindow):
         apuntador = 0
         apuntadorC = 0
         
+def verifyRoutesAndArchives(entry):
+
+    
+    #EN ESTE METODO VERIFICAMOS PRIMERO QUE COMANDO ES YA QUE CADA EN UNOS CASOS NO SE DEBE DE VERIFICAR SI EL ARCHIVO EXISTE
+    print(entry)
+
+    rutas = []
+    archivos = []
+
+    if entry[0] == 'mkdir':
+        return False
+    elif entry[0] == 'cd':
+        #EL CD SOLAMENTE SE VERIFICARA SI TRAE UN ARCHIVO O RUTA SI NO LO REGRESAMOS AUTOMATICAMENTE
+        if entry[1] == '..':
+            return False
+        else:
+            #VERIFICAMOS SI ES UNA RUTA O UNA CARPETA LO QUE TRAE
+            if entry[1].count('/') > 0:
+                rutas.append(entry[1])
+            else: 
+                archivos.append(entry[1])
+    elif entry[0] == 'ls':
+        if len(entry) == 1:
+            return False
+        if len(entry) == 2:
+            if entry[1] == '-l':
+                return False
+            else:
+                if entry[1].count('/') > 0:
+                    rutas.append(entry[1])
+                else: 
+                    archivos.append(entry[1])
+        else:
+            if entry[2].count('/') > 0:
+                rutas.append(entry[2])
+            else: 
+                archivos.append(entry[2])
+    elif entry[0] == 'mv':
+        rutas.append(entry[1])  
+        archivos.append(entry[2]) 
+        rutas.append(entry[3])  
+        archivos.append(entry[4]) 
+    elif entry[0] == 'rm':
+        rutas.append(entry[1])  
+        archivos.append(entry[2]) 
+    elif entry[0] == 'touch':
+        rutas.append(entry[1])  
+        archivos.append(entry[2]) 
+
+
+
+    print(f'Rutas existentes: {rutas}')
+    print(f'Archivos existentes: {archivos}')
+
+
+    for i in range(len(rutas)):
+         if os.path.exists(rutas[i]) == False:
+             return 'Error de ruta'
+
+    for i in range(len(archivos)):
+         if os.path.exists(archivos[i]) == False:
+             return 'Error de archivo'
+
+    return False
+
+
+
+    # for i in range(len(entry)):
+    #             if isDirection(entry[i]):
+    #                 if os.path.exists(entry[i]) == False:
+    #                     error= 'Error de ruta'
+    #                     break
+    #                 elif i+1 < len(entry):
+    #                     # print('primer error archivo')   
+    #                     if isPalabra(entry[i+1]):
+    #                         if os.path.exists(entry[i]) == False:
+    #                             error= 'Error de Archivo'
+    #                             break
+    #             if isDirection(entry[len(entry)-1]) == False:
+    #                 print(entry[len(entry) - 1])
+    #                 if isPalabra(entry[len(entry)-1]):
+    #                     print('se error archivo')   
+    #                     if isPalabra(entry[i+1]):
+    #                         if os.path.exists(entry[i]) == False:
+    #                             error= 'Error de Archivo'
+    #                             break
 
 def isDirection (sDirec):
     if sDirec[len(sDirec)-1] == '/' and sDirec[0] == '/':
